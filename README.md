@@ -20,7 +20,7 @@ Follow the URL link provided: https://jsskilton.github.io/Weather-Dashboard/
 
 The search box is on the left side of the page. When a valid city is searched for, today's weather is shown in a large box with the following five days shown in boxes below. Valid cities are added to the history on the left side. When one of these cities is clicked, the weather forecast is updated for the relevant city. If an invalid city is searched, a warning message flashes up. The history can be cleared from local storage by pressing the 'Clear History' button.
 
-![screenshot of webpage](Screenshot1.JPG)
+![screenshot of webpage](assets/Screenshot1.JPG)
 
 ## Credits
 
