@@ -31,7 +31,7 @@ function getCoordinates(city) {
         console.log('test');
         displayErrorMessage('Invalid city. Please enter a valid city name.');
       }
-      
+
     })
     .catch(function (error) {
       console.error('Error fetching coordinates:', error);
@@ -40,23 +40,32 @@ function getCoordinates(city) {
 
 // Function to display an error message on the screen
 function displayErrorMessage(message) {
-    // You can customize this part based on your UI structure
-    var errorContainer = $('#error-message');
-    errorContainer.text(message);
-    errorContainer.show();
+  var errorContainer = $('#error-message');
+  errorContainer.text(message);
+  errorContainer.show();
 
-    // Hide the error message after a brief duration (e.g., 3 seconds)
-    setTimeout(function () {
-        errorContainer.hide();
-    }, 3000);
+  // Hide the error message after 2 seconds 
+  setTimeout(function () {
+    errorContainer.hide();
+  }, 2000);
 }
 
 // Helper function to format time from timestamp
 function formatTime(timestamp) {
   var date = new Date(timestamp * 1000);
-  return date.toLocaleTimeString('en-GB', { hour: 'numeric', minute: 'numeric', hour12: true });
+  var hours = date.getHours().toString().padStart(2, '0');
+  var minutes = date.getMinutes().toString().padStart(2, '0');
+  return hours + ':' + minutes;
 }
 
+// Function to capitalise the first letter of each word
+function capitaliseCity(city) {
+  return city.toLowerCase().replace(/\b\w/g, function (char) {
+    return char.toUpperCase();
+  });
+}
+
+// Function to get forecast from coordinates
 function getForecast(latitude, longitude) {
 
   var forecastURL =
@@ -73,16 +82,18 @@ function getForecast(latitude, longitude) {
       return response.json();
     })
     .then(function (data) {
+      //For debugging
       console.log('Forecast API Response:', data); // Log the API response for debugging
 
       if (data.city && data.list && data.list.length > 0) {
         var todayData = data.list[0];
         var forecastHTML = '';
+        var todayHTML = '';
 
         // Display today's weather information
-        forecastHTML +=
-          '<div class="col-lg-12">' +
-          '<h2>' + data.city.name + ' - Today</h2>' +
+        todayHTML +=
+          '<div class="col-lg-12 today-weather">' +
+          '<h2>' + data.city.name + ' - Today (' + new Date().toLocaleDateString('en-GB') + ')</h2>' +
           '<img src="https://openweathermap.org/img/w/' + todayData.weather[0].icon + '.png" alt="Weather Icon">' +
           '<p>Temperature: ' + todayData.main.temp + ' °C</p>' +
           '<p>Humidity: ' + todayData.main.humidity + '%</p>' +
@@ -90,26 +101,40 @@ function getForecast(latitude, longitude) {
           '<p>Time: ' + formatTime(todayData.dt) + '</p>' +
           '</div>';
 
-        // Display the forecast for the next five days at 12 PM noon
-        for (var i = 0; i <= 5; i++) {
-          // Check if the required properties are available
-          if (data.list[i * 8] && data.list[i * 8].dt && data.list[i * 8].weather && data.list[i * 8].main) {
-            var forecastDate = new Date(data.list[i * 8].dt * 1000);
-            var forecastDateFormatted = new Intl.DateTimeFormat('en-GB').format(forecastDate);
-            var forecastIcon = data.list[i * 8].weather[0].icon;
-            var forecastTemperature = data.list[i * 8].main.temp;
-            var forecastHumidity = data.list[i * 8].main.humidity;
-            var forecastWindSpeed = data.list[i * 8].wind.speed;
+        //Update the #today section with the new content
+        $('#today').html(todayHTML);
 
+        // Add subtitle for the Five Day Forecast
+        forecastHTML += '<div class="col-lg-12 mt-2 mb-2"><h3>Five Day Forecast</h3></div>';
+
+        //For debugging
+        console.log('Number of items in data.list:', data.list.length);
+
+        // Display the forecast for the next five days at 12 PM noon
+        for (var i = 1; i <= 5; i++) {
+          // Calculate the index for the forecast item
+          var forecastIndex = i * 8 - 1; // Adjusted to get the last data point for each day
+
+          console.log('Checking data for day ' + i, data.list[forecastIndex]);
+
+          // Check if the required properties are available
+          if (data.list[forecastIndex] && data.list[forecastIndex].dt && data.list[forecastIndex].weather && data.list[forecastIndex].main) {
+            var forecastDate = new Date(data.list[forecastIndex].dt * 1000);
+            var forecastDateFormatted = new Intl.DateTimeFormat('en-GB').format(forecastDate);
+            var forecastIcon = data.list[forecastIndex].weather[0].icon;
+            var forecastTemperature = data.list[forecastIndex].main.temp;
+            var forecastHumidity = data.list[forecastIndex].main.humidity;
+            var forecastWindSpeed = data.list[forecastIndex].wind.speed;
+            
             // Construct HTML content for each day
             forecastHTML +=
-              '<div class="col-lg-2 mb-3">' +
-              '<p>' + forecastDateFormatted + '</p>' +
+              '<div class="col-lg-2 mb-3 forecast-weather">' +
+              '<p><strong>' + forecastDateFormatted + '</strong></p>' +
               '<img src="https://openweathermap.org/img/w/' + forecastIcon + '.png" alt="Weather Icon">' +
               '<p>Temperature: ' + forecastTemperature + ' °C</p>' +
               '<p>Humidity: ' + forecastHumidity + '%</p>' +
               '<p>Wind Speed: ' + forecastWindSpeed + ' km/h</p>' +
-              '<p>Time: ' + formatTime(data.list[i * 8].dt) + '</p>' +
+              '<p>Time: ' + formatTime(data.list[forecastIndex].dt) + '</p>' +
               '</div>';
           }
         }
@@ -128,17 +153,17 @@ function getForecast(latitude, longitude) {
 // Function to clear the search history
 function clearHistory() {
   localStorage.removeItem('searchHistory');
-  updateSearchHistoryUI([]);
+  updateSearchHistory([]);
 }
 
 // Function to render search history on the page
-function updateSearchHistoryUI(searchHistory) {
+function updateSearchHistory(searchHistory) {
   var historyList = $('#history');
-  historyList.empty();  // Clear the existing list
+  historyList.empty();
 
   searchHistory.forEach(function (city) {
     var listItem = $('<button>')
-      .addClass('list-group-item list-group-item-action')
+      .addClass('list-group-item list-group-item-action btn-secondary')
       .text(city)
       .on('click', function () {
         getCoordinates(city);
@@ -149,23 +174,26 @@ function updateSearchHistoryUI(searchHistory) {
 }
 
 function addToHistory(city) {
-  // Get the existing search history from local storage or initialize an empty array
+  // Capitalise the city name before saving to local storage
+  var capitalisedCity = capitaliseCity(city);
+
+  // Get the existing search history from local storage or initialise an empty array
   const searchHistory = JSON.parse(localStorage.getItem('searchHistory')) || [];
 
-  // Check if the city is not already in the search history
-  if (!searchHistory.includes(city)) {
+  // Check if the city or capitalsed city is not already in the search history
+  if (!searchHistory.includes(city) && !searchHistory.includes(capitalisedCity)) {
     // Add the new city to the search history
-    searchHistory.push(city);
+    searchHistory.push(capitalisedCity);
 
     // Save the updated search history back to local storage
     localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
 
     // Update the HTML with the new search history
-    updateSearchHistoryUI(searchHistory);
+    updateSearchHistory(searchHistory);
 
-    console.log('Adding to history:', city);
+    console.log('Adding to history:', capitalisedCity);
   } else {
-    console.log('City already exists in history:', city);
+    console.log('City already exists in history:', capitalisedCity);
   }
 }
 
@@ -174,7 +202,7 @@ function loadHistory() {
   // Retrieve history from local storage
   var historyJSON = localStorage.getItem('searchHistory');
 
-  // If history exists, parse it from JSON; otherwise, initialize an empty array
+  // If history exists, parse it from JSON; otherwise, initialise an empty array
   var history = historyJSON ? JSON.parse(historyJSON) : [];
 
   return history;
@@ -195,9 +223,4 @@ $('#search-form').submit(function (event) {
 
 // Load search history on page load and render buttons
 var initialSearchHistory = loadHistory();
-updateSearchHistoryUI(initialSearchHistory);
-
-// Example: Display weather for the first city in the search history
-if (initialSearchHistory.length > 0) {
-    getCoordinates(initialSearchHistory[0]);
-}
+updateSearchHistory(initialSearchHistory);

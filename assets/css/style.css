@@ -1,0 +1,56 @@
+
+.clear-history-button {
+  width: 100%;
+  margin-top: 10px;
+}
+
+#search-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#search-button {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.weather-hr {
+  border-top: 1px solid #ccc;
+  margin-top: 10px;
+}
+
+#history button {
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  margin-bottom: 15px;
+}
+
+#history button:hover {
+  background-color: #dcdcdc;
+}
+
+.today-weather {
+  border: 1px solid #000;
+  padding: 10px;
+  margin-bottom: 10px;
+  transition: border-color 0.3s ease;
+}
+
+.forecast-weather {
+  box-sizing: border-box;
+  width: calc(20% - 4px);
+  margin: 1.6%;
+  border: 1px solid #000;
+  background-color: #001f3f;
+  color: #fff;
+  padding: 10px;
+  transition: border-color 0.3s ease, background-color 0.3s ease;
+}
+
+.weather-search {
+  height: 40px;
+}
+
+.h4 {
+  font-size: 4pt !important;
+}
